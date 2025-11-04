@@ -366,7 +366,7 @@ if master_process:
     plt.savefig(png_path)
     plt.close()
 
-    print(f"[loss curves saved] {csv_path} , {png_path}")
+    print(f"[loss curves saved], {png_path}")
 
 if ddp:
     destroy_process_group()
