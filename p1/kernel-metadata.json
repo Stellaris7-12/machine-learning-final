@@ -1,6 +1,6 @@
 {
-  "id": "your-id/DDA5001-project",
-  "title": "DDA5001 Final Project",
+  "id": "heyunhui/DDA5001-project",
+  "title": "DDA5001 Project",
   "code_file": "./main.ipynb",
   "language": "python",
   "kernel_type": "notebook",
@@ -8,7 +8,7 @@
   "enable_gpu": "true",
   "enable_tpu": "false",
   "enable_internet": "true",
-  "dataset_sources": ["your-id/nanogpt-code"],
+  "dataset_sources": ["heyunhui/nanogpt-code"],
   "competition_sources": [],
   "kernel_sources": [],
   "model_sources": []
