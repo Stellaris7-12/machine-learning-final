@@ -1,11 +1,11 @@
 # =====================================================================================
 # A. SCRIPT SETUP & IMPORTS
 # =====================================================================================
-import argparse
-import os
-import pickle
+import argparse  # 用于命令行参数解析
+import os  # 提供与操作系统交互的功能
+import pickle  # 用于对象的序列化和反序列化
 from datasets import load_dataset
-from transformers import AutoTokenizer
+from transformers import AutoTokenizer  # AutoTokenizer可以根据预训练模型的名称自动加载对应的分词器配置和参数
 
 # =====================================================================================
 # B. CORE DATA PREPARATION FUNCTION
@@ -35,7 +35,7 @@ def prepare_tokenize_and_save(
     print(f"Loading dataset: '{dataset_name}'")
     original_dataset = load_dataset(dataset_name, split="train")
 
-    if debug_mode:
+    if debug_mode: # If debug mode is enabled, use only 5% of the data
         num_samples = len(original_dataset) // 20
         original_dataset = original_dataset.shuffle(seed=42).select(range(num_samples))
         print(
@@ -63,41 +63,48 @@ def prepare_tokenize_and_save(
         prompts = examples[prompt_column]
         responses = examples[response_column]
 
-        # TODO:
         # We need to convert the chat templates to strings first to use the main tokenizer call
+        # 创建完整的对话列表，每个对话包含用户问题和助手回答
         full_chats = [
             [
-                {"role": "user", "content": p + XXX},
+                # 用户角色，包含问题内容和要求逐步推理并框出最终答案的提示
+                {"role": "user", "content": p + "\nPlease reason step by step, and put your final answer within \\boxed{}"},
+                # 助手角色，包含对应的回答内容
                 {"role": "assistant", "content": r},
             ]
+            # 通过zip函数将prompts和responses配对，生成对话列表
             for p, r in zip(prompts, responses)
         ]
+        # 使用tokenizer的apply_chat_template方法处理对话列表，生成完整的文本列表
         full_texts = [
-            tokenizer.apply_chat_template(conversation=XXX,
-                                          tokenize=False,
-                                          add_generation_prompt=False,
-                                          enable_thinking=False)
-            for XXX in XXX
+            # 对每个对话应用聊天模板
+            tokenizer.apply_chat_template(conversation=chat,
+                                          tokenize=False,           # 不进行分词处理
+                                          add_generation_prompt=False,  # 不添加生成提示
+                                          enable_thinking=False)     # 禁用思考模式
+            # 遍历所有对话，处理每个对话
+            for chat in full_chats
         ]
 
 
         # Tokenize prompts separately to calculate their length for masking
         prompt_only_chats = [
-            [{"role": "user", "content": p + XXX}] for p in prompts
+            [{"role": "user", "content": p + "\nPlease reason step by step, and put your final answer within \\boxed{}"}] for p in prompts
         ]
         prompt_texts = [
-            tokenizer.apply_chat_template(conversation=XXX,
+            tokenizer.apply_chat_template(conversation=chat,
                                           tokenize=False,
                                           add_generation_prompt=True,
                                           enable_thinking=False)
-            for XXX in XXX
+            for chat in prompt_only_chats
         ]
 
         # Use the tokenizer's main `__call__` method to get input_ids AND attention_mask
+        # 使用tokenizer对完整文本进行分词处理
         tokenized_outputs = tokenizer(
-            full_texts,
-            max_length=max_length,
-            truncation=True,
+            full_texts,  # 输入的完整文本列表
+            max_length=max_length,  # 设置最大长度
+            truncation=True,  # 启用截断，超过max_length的部分会被截断
             padding=False,  # Collator will handle padding
         )
         tokenized_prompts = tokenizer(
@@ -109,7 +116,7 @@ def prepare_tokenize_and_save(
         for i, full_ids in enumerate(tokenized_outputs["input_ids"]):
             prompt_len = len(tokenized_prompts["input_ids"][i])
             label = list(full_ids)  # Copy input_ids
-            label[:XXX] = [-100] * XXX  # Mask prompt when calculating loss
+            label[:prompt_len] = [-100] * prompt_len  # Mask prompt when calculating loss
             labels_list.append(label)
 
         # Add labels to our dictionary
@@ -130,7 +137,7 @@ def prepare_tokenize_and_save(
     )
 
     train_dataset = train_dataset.filter(
-        lambda x: len(x["input_ids"]) < max_length, num_proc=num_proc
+        lambda x: len(x["input_ids"]) < max_length, num_proc=num_proc #  过滤训练数据集，只保留input_ids长度小于max_length的样本
     )
     val_dataset = val_dataset.filter(
         lambda x: len(x["input_ids"]) < max_length, num_proc=num_proc
@@ -198,10 +205,10 @@ def main():
         default="data",
         help="Directory to save the tokenized pickle files.",
     )
-    parser.add_argument(
+    parser.add_argument( # 基础模型
         "--model_name_or_path",
         type=str,
-        default="Qwen/Qwen3-0.6B-Base",
+        default="Qwen/Qwen2.5-Math-1.5B",  # 默认值为Qwen/Qwen3-0.6B-Base
         help="Hugging Face model for the tokenizer.",
     )
     parser.add_argument(

@@ -17,7 +17,7 @@ def set_seed(seed):
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
 
-set_seed(42)
+set_seed(225040182)
 
 
 def main(model_name, output_filename, lora_path=None):
@@ -38,7 +38,12 @@ def main(model_name, output_filename, lora_path=None):
 
     # 2. Initialize Tokenizer and Model
     # padding_side='left' to resolve the warning and ensure correct generation
-    tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True, padding_side='left')
+    tokenizer = AutoTokenizer.from_pretrained(
+    model_name, 
+    trust_remote_code=True, 
+    padding_side='left',
+    fix_mistral_regex=True  # 添加这行
+    )
     
     # Set pad token if it's not set, which is required for batch generation
     if tokenizer.pad_token is None:
@@ -48,7 +53,7 @@ def main(model_name, output_filename, lora_path=None):
     # Prepare chat-style prompts
     prompt_chats = [
         [
-            {"role": "user", "content": p + XXX}
+            {"role": "user", "content": p + "\nPlease reason step by step, and put your final answer within \\boxed{}"}
         ]
         for p in prompts
     ]
@@ -56,12 +61,12 @@ def main(model_name, output_filename, lora_path=None):
     # Apply chat template to each
     prompt_strs = [
         tokenizer.apply_chat_template(
-            conversation=XXX,
+            conversation=chat,
             add_generation_prompt=True,
             tokenize=False,
             enable_thinking=False,
         )
-        for XXX in XXX
+        for chat in prompt_chats
     ]
 
     # 3. Create Transformers Model with conditional LoRA support
@@ -72,7 +77,7 @@ def main(model_name, output_filename, lora_path=None):
     model = AutoModelForCausalLM.from_pretrained(
         model_name,
         trust_remote_code=True,
-        torch_dtype=dtype,
+        dtype=dtype,
         device_map="auto"  # Automatically maps the model to available GPUs
     )
 
@@ -94,10 +99,10 @@ def main(model_name, output_filename, lora_path=None):
 
     # Generation parameters (equivalent to vLLM's SamplingParams)
     generation_kwargs = {
-        "temperature": 1.0,
+        "temperature": 1, # 将1减小为0.1
         "top_p": 0.95,
         "max_new_tokens": 512,  # Note: transformers uses max_new_tokens
-        "repetition_penalty": 1.0,
+        "repetition_penalty": 1, # 将1增大为1.1
         "do_sample": True, # Required for temperature and top_p to have an effect
     }
 
