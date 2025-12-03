@@ -25,6 +25,37 @@ For users with a compatible local machine, you can refer to `vllm_rollout.py` fo
 
 While the core training logic should be preserved, you are encouraged to experiment with other components if you wish to explore further!
 
+### Part 3
+
+All files for Part 3 are located in the `p3` directory.
+
+**Note:** `p3/example.ipynb` provides a partial example for reference.
+
+#### Environment Setup
+
+**Prerequisites**
+Before configuring the Jupyter Notebook, ensure you have uploaded the **Part 3** code to Kaggle as a dataset. Please refer to [Kaggle_training.md](Kaggle_training.md) for detailed instructions.
+
+**Environment Configuration**
+To accelerate the inference process, this project utilizes **vLLM**, and 2 GPU cards with data parallelism.
+
+In Kaggle main page, click "Create" button and select "Notebook", then, in the new notebook page, click "File" -> "Import Notebook" to upload `main.ipynb`.
+
+After uploading your Jupyter Notebook to Kaggle, please configure the environment as follows:
+
+1.  **Session Options:**
+    *   **ACCELERATOR:** Set to `GPU T4 x2`.
+    *   **INTERNET:** Set to `On`.
+    *   **PERSISTENCE:** Set to `Files only` (allows files to persist across sessions).
+
+2.  **Input Sources:**
+    *   **Add your dataset:** Click "Add Input" and select the dataset containing your uploaded code.
+    *   **Add vLLM environment:** Search for the following URL and add it as an input (this is required to install vLLM correctly):
+        *   URL: [https://www.kaggle.com/datasets/yangjiahua/it-is-vllm-0-8-5](https://www.kaggle.com/datasets/yangjiahua/it-is-vllm-0-8-5)
+
+**Local Development**
+If you are running this on a local machine, please refer to [p3/requirements.txt](p3/requirements.txt) for the necessary environment dependencies.
+
 ## Acknowledgements
 
 The project is based on [nanoGPT](https://github.com/karpathy/nanoGPT). Thanks for the great work!
